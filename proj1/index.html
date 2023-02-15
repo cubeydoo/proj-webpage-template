@@ -1,7 +1,253 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: center;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="middle">Project 1: Rasterizer</h1>
+<h2 align="middle">Andrew Zhang, CS184</h2>
+
+<br><br>
+
+    <div>
+
+        <h2 align="middle">Overview</h2>
+        <p style="text-align:left">Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
+
+        <h2 align="middle">Section I: Rasterization</h2>
+
+        <h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+
+        <p style="text-align:left">
+            Rasterization is the process of converting image data into pixels, which can then be shown on a computer screen. To rasterize a triangle
+            we test if each pixel is inside the triangle, and if it is, we color it using the triangle's color. Since each pixel is a square, and may be
+            partially in and partially out of the triangle, we simply test the center of each pixel and then apply color to the entire pixel based on
+            whether or not the center was inside the triangle. To test if a point is inside a triangle, we use the line test. Which essentially computes a dot
+            product of a vector from the line to the point and a normal of the line. This dot product will be positive if the point is on one side of the line
+            and negative if the point is on the other side. If the point is on the same side of all three lines (i.e. the line test is all positive or all negative),
+            then the point is inside the triangle.
+        </p>
+        <p style="text-align:left">
+            Our algorithm is no worse than the one that checks each sample in the bounding box of the triangle because it is the algorithm that checks each
+            sample in the bounding box of the triangle. It finds the minimum X value and minimum Y value of all three points, which are the top and left
+            sides of the bounding box, and loops until it hits the maximum X value and maximum Y value, the bottom and right sides.
+        </p>
+        <img src="images/image1.png" align="middle" width="400px" />
+        <figcaption align="middle">basic/test4.svg on the edge of a thin triangle.</figcaption>
+
+
+        <h3 align="middle">Part 2: Antialiasing triangles</h3>
+
+        <p style="text-align:left">
+            To enable supersampling in our rasterization algorithm, we first multiplied our sample_buffer by the rate. This gives us extra
+            array elements to store more data points. Then we scaled the location of the triangle points by the rate as well, accounting
+            for the rate factor of extra sample points. Then we ran our original sampling algorithm on this larger canvas, and in the end
+            we averaged a square of points to downsample back into our original frame size. This square would have sqrt(sample_rate) side
+            lengths, so that overall in each pixel there would be sample_rate samples.
+        </p>
+        <p style="text-align:left">
+            Sampling is useful because it allows us to show the average of color values, instead of having sharp transitions from color to
+            color. This way, edges are smoother than what should be possible with grid-aligned pixels.
+        </p>
+        <p style="text-align:left">
+            Modifications to the rasterization process just involve scaling the size of the sample_buffer to accomodate extra samples, and
+            moding the sample_buffer to frame_buffer process by taking into account the supersampling rate, and the averaging that many
+            samples into the resultiing frame_buffer.
+        </p>
+        <p style="text-align:left">
+            Aliasing is caused by high frequencies, or by a large rate of change in color intensity values. By supersampling and averaging,
+            we are able to reduce the rate of change in color intensity (AKA antialiasing), since instead of jumping from one color to the next,
+            the boundary pixels have a mixture of both colors based on is location, slowing the amount of change in each pixel.
+        </p>
+
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/image2.png" align="middle" width="400px" />
+                        <figcaption align="middle">basic/test4.svg with sample rate of 1</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/image3.png" align="middle" width="400px" />
+                        <figcaption align="middle">basic/test4.svg with sample rate of 4</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/image4.png" align="middle" width="400px" />
+                        <figcaption align="middle">basic/test4.svg with sample rate of 16</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p style="text-align:left">
+            The smoothing effect shown above is increasing as the sample rate increases because at higher sampling rates, the triangle is
+            approaching the true triangle that is made by the three points given in the SVG. Because the pixels are all or nothing, with
+            a rate of 1 there are white pixels that are partially covered by the triangle. This is because the center of the white pixel is outside the triangle.
+            But with smaller pixels, some of those in between pixels have their
+            centers inside the triangle, and we get some red. This red is pinkish because they are being averaged with the surrounding white
+            pixels. At a sampling rate of 16, with the smallest samples, we get the best approximation to the triangle.
+        </p>
+
+        <h3 align="middle">Part 3: Transforms</h3>
+        <img src="images/image5.png" align="middle" width="400px" />
+        <figcaption align="middle">my robot doing gangnam style.</figcaption>
+        <p style="text-align:left">
+            I edited the arms and legs of the robot to make it look like he is doing the iconic gangnam style dance. I made the arm a
+            lighter color so that it would be visible in front of the robot
+        </p>
+
+        <h2 align="middle">Section II: Sampling</h2>
+
+        <h3 align="middle">Part 4: Barycentric coordinates</h3>
+        <p style="text-align:left">
+            Barycentric coordinates is a way of describing a point in terms of other points. In this task, we describe a point inside a
+            triangle in terms of the three vertices of the triangle, but this doesn't have to be the case. We could use the four points
+            of a quadrilateral or even points of polyhedra in 3D space or even higher dimensions. In this task, we defined that the color
+            of a point inside a triangle is a function of the colors of the vertices of the triangle. More specifically, the closer a
+            point is to a vertex, the more that vertex contributes to the final color of the point. This was done through linear interpolation.
+            We can see this effect in this test triangle below. The vertices are pure green, red, and blue, but inside the triangle the colors
+            are mixed through interpolation. The closer a point is to the top vertex, the more green it is. Colors in the center of the
+            triangle are an even mix of all three colors, so that's why they look greyscale.
+        </p>
+        <img src="images/image6.png" align="middle" width="400px" />
+        <figcaption align="middle">A blended triangle.</figcaption>
+        <p style="text-align:left">
+            This is the result of test7.svg:
+        </p>
+        <img src="images/image7.png" align="middle" width="400px" />
+        <figcaption align="middle">svg/basic/test7.svg</figcaption>
+
+        <h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+        <p style="text-align:left">
+            Sampling is the process of approximating a continuous function when you cannot evaluate that function at infinitely many points. So instead you take a finite
+            number of "samples" of the function at various points to get the best approximation. For pixel sampling, we use the same process to draw on a screen.
+            Since we only have a finite amount of pixels, we sample what we want to display for each pixel, and fill the whole pixel with the color of the sample. To map
+            a texture onto a surface, we sample the pixels on that surface, and find the corresponding color in the same place in the texture. If the texture is much
+            larger than our screen/map size, there are many in between pixels that we cannot capture. If the texture is much smaller, then many nearby pixels will sample to the same
+            color.
+        </p>
+        <p style="text-align:left">
+            In this task, we implemented two different types of sampling. The first is nearest, which says that a pixel should be the same color as the closest sample on
+            the texture. The second is bilinear sampling, which says that a pixel should be the average color of the 4 closest neighbors, with each color weighted by the distance
+            from the pixel to each texture sample point. Examples of each technique are shown below.
+        </p>
+
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/nearest1.png" align="middle" width="400px" />
+                        <figcaption align="middle">Nearest sampling, no supersampling.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/bilinear1.png" align="middle" width="400px" />
+                        <figcaption align="middle">Bilinear sampling, no supersampling.</figcaption>
+                    </td>
+                </tr>
+                <br />
+                <tr>
+                    <td>
+                        <img src="images/nearest16.png" align="middle" width="400px" />
+                        <figcaption align="middle">Nearest sampling, 16x supersampling.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/bilinear16.png" align="middle" width="400px" />
+                        <figcaption align="middle">Bilinear sampling, 16x supersampling.</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p style="text-align:left">
+            As you can see, generally bilinear sampling is better, with smoother lines even with no supersampling. You can see this by looking at the bottom line in the
+            top right corners of the top two images. And even with supersampling, nearest sampling has bright spots in the vertical lines that bilinear doesn't. When the
+            texture is much more detailed (much larger) than the amount of pixels we have to display, then bilinear truly begins to shine, as it takes the average of
+            mulitple pixels, smoothing the color transition between them. In contrast, nearest sampling will only look at every nth pixel, where n depends on the difference
+            in size between the mapping surface and texture.
+        </p>
+
+        <h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+
+
+        <img src="images/base.png" align="middle" width="400px" />
+        <figcaption align="middle">Original image</figcaption>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/LZERO_NP.png" align="middle" width="400px" />
+                        <figcaption align="middle">L_ZERO P_NEAREST </figcaption>
+                    </td>
+                    <td>
+                        <img src="images//LZERO_BP.png" align="middle" width="400px" />
+                        <figcaption align="middle">L_ZERO P_LINEAR</figcaption>
+                    </td>
+                </tr>
+                <br />
+                <tr>
+                    <td>
+                        <img src="images/LNEAREST_BP.png" align="middle" width="400px" />
+                        <figcaption align="middle">L_NEAREST P_LINEAR</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/LNEAREST_NP.png" align="middle" width="400px" />
+                        <figcaption align="middle">L_NEAREST P_NEAREST</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+
+
+        <h2 align="middle">Section III: Art Competition</h2>
+        <p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+        <h3 align="middle">Part 7: Draw something interesting!</h3>
+
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/image1.png" align="middle" width="400px" />
+                        <figcaption align="middle">Caption goes here.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/image2.png" align="middle" width="400px" />
+                        <figcaption align="middle">Caption goes here.</figcaption>
+                    </td>
+                </tr>
+                <br />
+                <tr>
+                    <td>
+                        <img src="images/image3.png" align="middle" width="400px" />
+                        <figcaption align="middle">Caption goes here.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/image4.png" align="middle" width="400px" />
+                        <figcaption align="middle">Caption goes here.</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </div></body>
 </html>
