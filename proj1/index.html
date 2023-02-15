@@ -187,6 +187,29 @@
         </p>
 
         <h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+        <p style="text-align:left">
+            Sometimes, when sampling textures, the spacing between pixels and texture match up in such a way as to produce recognizable
+            patterns, even if these patterns don't actually exist. These are so called Moire effects. These are expecially apparent in landscapes and other
+            graphics where there is a smooth transition from near to far. This smooth transition ensures that every frequency of sampling is reached, making it
+            more like that these periodic patterns emerge. To combat this, textures that are far away can be downsampled to reduce their frequency, smoothing
+            out faraway textures. This effect can even speed up rendering as these lower resolution textures are essentially precomputing the averaging steps of
+            downsampling.
+        </p>
+        <p style="text-align:left">
+            To implement this ourselves, we had mipmapped texutures precomputed. When we sample a texture, we calculate how far a small change in position in
+            pixel space would change the corresponding position in texture space (using derivatives). If the texture sampling position moves a lot, then we know that our pixel is
+            currently representing a larger area of texture space. In this case, we should sample from a lower resolution image to capture the average of many
+            pixels quickly. The bigger the change, the further the texture is and the lower resolution we should go.
+        </p>
+        <p style="text-align:left">
+            Mipmapping isn't free, however. To use mipmapping, we have to store our full size image, and several lower resolution images, resulting in up
+            to double the space needed for each texture, depending on how aggressive your downsampling is per level. This is the tradeoff between on the fly
+            computation vs precomputing. And obviously, since we are sampling from a lower resolution image, some details may be lost that otherwise could
+            have been preserved. In this task, L_ZERO has the least overhead, but is subject to Moire patterns. L_NEAREST is a quick approximation, but may
+            seem crude when transitioning between mipmap levels. Finally, L_Linear is the most expensive (double L_NEAREST and a lerp), but looks the best, even across large distances.
+        </p>
+
+
 
 
         <img src="images/base.png" align="middle" width="400px" />
@@ -224,31 +247,7 @@
 
         <h3 align="middle">Part 7: Draw something interesting!</h3>
 
-        <div align="middle">
-            <table style="width=100%">
-                <tr>
-                    <td>
-                        <img src="images/image1.png" align="middle" width="400px" />
-                        <figcaption align="middle">Caption goes here.</figcaption>
-                    </td>
-                    <td>
-                        <img src="images/image2.png" align="middle" width="400px" />
-                        <figcaption align="middle">Caption goes here.</figcaption>
-                    </td>
-                </tr>
-                <br />
-                <tr>
-                    <td>
-                        <img src="images/image3.png" align="middle" width="400px" />
-                        <figcaption align="middle">Caption goes here.</figcaption>
-                    </td>
-                    <td>
-                        <img src="images/image4.png" align="middle" width="400px" />
-                        <figcaption align="middle">Caption goes here.</figcaption>
-                    </td>
-                </tr>
-            </table>
-        </div>
+        <p>Link to webpage: https://cubeydoo.github.io/proj-webpage-template/proj1/index.html</p>
 
     </div>
 </body>
